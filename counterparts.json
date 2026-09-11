@@ -14,7 +14,44 @@
       "revision": "b94c070ad1f1e1cac985167b0797a21a9acd7b8f",
       "role": "production-browser-worker-ssr-loader",
       "contractAuthority": "ores-wasm-loaders/owls-interfaces",
-      "status": "admitted-canary"
+      "status": "admitted-canary",
+      "constraints": [
+        "preparation-must-not-execute-application-code",
+        "activation-remains-document-local",
+        "same-origin-cache-reuse-is-bytes-not-runtime"
+      ]
+    },
+    {
+      "repository": "ores-wasm-loaders/owls-runtime.rs",
+      "revision": "ccf4260284ece2119fce166c6dcab74904f8fede",
+      "role": "native-rust-raw-wasm-runtime",
+      "contractAuthority": "ores-wasm-loaders/owls-interfaces",
+      "status": "admitted-canary",
+      "constraints": [
+        "raw-wasm-only",
+        "no-ambient-wasi-filesystem-network-process-imports",
+        "fuel-and-memory-limits-required"
+      ]
+    },
+    {
+      "repository": "ores-wasm-loaders/owls-flutter",
+      "revision": "2886c216e1e074883b83afefbfb4a937a3c1cdf1",
+      "role": "flutter-host-and-byte-transport",
+      "contractAuthority": "ores-wasm-loaders/owls-interfaces",
+      "status": "admitted-canary",
+      "constraints": [
+        "core-types-independent-of-dart-io-and-webview",
+        "native-cache-is-not-browser-cache",
+        "never-evaluate-caller-provided-javascript"
+      ]
     }
+  ],
+  "excludedLegacyRepositories": [
+    "ores-wasm-loaders/owl-legacy-coordinator",
+    "ores-wasm-loaders/owl-legacy-docs",
+    "ores-wasm-loaders/owl-legacy-flutter-loader",
+    "ores-wasm-loaders/owl-legacy-infra",
+    "ores-wasm-loaders/owl-legacy-interfaces",
+    "ores-wasm-loaders/owl-legacy-rust-loader"
   ]
 }
