@@ -47,14 +47,34 @@ jobs:
           for (const invariant of doc.invariants ?? []) required.delete(invariant);
           if (required.size) throw new Error(`missing fleet invariant(s): ${[...required].join(', ')}`);
           if (!Array.isArray(doc.counterparts) || doc.counterparts.length === 0) throw new Error('at least one counterpart is required');
+          const legacy = new Set(doc.excludedLegacyRepositories ?? []);
+          for (const repository of legacy) {
+            if (!/^ores-wasm-loaders\/owl-legacy-[A-Za-z0-9_.-]+$/.test(repository)) {
+              throw new Error(`invalid legacy exclusion ${repository}`);
+            }
+          }
           const repos = new Set();
+          const roles = new Set();
           for (const item of doc.counterparts) {
             if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(item.repository ?? '')) throw new Error('invalid repository coordinate');
             if (!/^[0-9a-f]{40}$/.test(item.revision ?? '')) throw new Error(`counterpart ${item.repository} must use an immutable 40-character commit`);
             if (repos.has(item.repository)) throw new Error(`duplicate counterpart ${item.repository}`);
+            if (legacy.has(item.repository) || item.repository.includes('/owl-legacy-')) throw new Error(`legacy repository cannot be admitted: ${item.repository}`);
             repos.add(item.repository);
-            if (!item.contractAuthority || !item.role || !item.status) throw new Error(`incomplete counterpart ${item.repository}`);
+            if (!item.contractAuthority || !item.role || item.status !== 'admitted-canary') throw new Error(`incomplete or unsupported counterpart ${item.repository}`);
+            if (!Array.isArray(item.constraints) || item.constraints.length === 0 || item.constraints.some((value) => typeof value !== 'string' || value.length === 0)) {
+              throw new Error(`counterpart ${item.repository} must declare capability-specific constraints`);
+            }
+            if (roles.has(item.role)) throw new Error(`duplicate counterpart role ${item.role}`);
+            roles.add(item.role);
           }
+          const expectedRoles = new Set([
+            'production-browser-worker-ssr-loader',
+            'native-rust-raw-wasm-runtime',
+            'flutter-host-and-byte-transport',
+          ]);
+          for (const role of roles) expectedRoles.delete(role);
+          if (expectedRoles.size) throw new Error(`missing active loader role(s): ${[...expectedRoles].join(', ')}`);
           NODE
       - name: Prove no implementation was copied into the family registry
         run: |
