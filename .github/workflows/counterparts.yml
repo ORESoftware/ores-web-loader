@@ -1,0 +1,65 @@
+name: counterpart registry
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: loader-counterparts-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact revision
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.16.0
+      - name: Validate registry shape and immutable counterpart revisions
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const doc = JSON.parse(fs.readFileSync('counterparts.json', 'utf8'));
+          if (doc.schemaVersion !== 1 || doc.family !== 'ores-web-loader') throw new Error('unsupported registry header');
+          const required = new Set([
+            'prepare-never-activates',
+            'immutable-release-identities',
+            'integrity-checked-assets',
+            'cold-activation-fallback',
+            'generated-evidence-is-not-authority',
+          ]);
+          for (const invariant of doc.invariants ?? []) required.delete(invariant);
+          if (required.size) throw new Error(`missing fleet invariant(s): ${[...required].join(', ')}`);
+          if (!Array.isArray(doc.counterparts) || doc.counterparts.length === 0) throw new Error('at least one counterpart is required');
+          const repos = new Set();
+          for (const item of doc.counterparts) {
+            if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(item.repository ?? '')) throw new Error('invalid repository coordinate');
+            if (!/^[0-9a-f]{40}$/.test(item.revision ?? '')) throw new Error(`counterpart ${item.repository} must use an immutable 40-character commit`);
+            if (repos.has(item.repository)) throw new Error(`duplicate counterpart ${item.repository}`);
+            repos.add(item.repository);
+            if (!item.contractAuthority || !item.role || !item.status) throw new Error(`incomplete counterpart ${item.repository}`);
+          }
+          NODE
+      - name: Prove no implementation was copied into the family registry
+        run: |
+          test ! -e index.mjs
+          test ! -e src
+          test ! -e package.json
+      - name: Prove validation is read-only
+        run: test -z "$(git status --porcelain=v1 --untracked-files=all)"
