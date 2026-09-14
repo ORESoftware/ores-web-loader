@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema_version": 1,
+  "source_implementation": {
+    "repository": "ores-wasm-loaders/owls-web-loader",
+    "revision": "b94c070ad1f1e1cac985167b0797a21a9acd7b8f"
+  },
+  "current_contract_authority": "ores-wasm-loaders/owls-interfaces",
+  "extraction_status": "not_admitted",
+  "required_evidence": [
+    "behavior-used-by-at-least-two-independent-loader-families",
+    "prepare-never-activates-conformance",
+    "cold-start-fallback-conformance",
+    "immutable-release-and-asset-digest-conformance",
+    "browser-worker-ssr-boundary-defined",
+    "framework-adapters-remain-outside-neutral-core",
+    "cross-runtime-fixtures-pass-at-immutable-counterpart-revisions",
+    "contract-authority-migration-plan-reviewed-before-any-schema-copy"
+  ],
+  "ownership": {
+    "manifest_verification": "neutral-core-candidate-after-admission",
+    "preparation_leases": "neutral-core-candidate-after-admission",
+    "browser_worker_ssr_behavior": "adapter-specific-until-proven-common",
+    "framework_adapters": "counterpart-owned",
+    "release_integrity": "contract-authority-owned",
+    "typespec_json_schema": "ores-wasm-loaders/owls-interfaces-until-explicit-migration"
+  },
+  "forbidden_before_admission": [
+    "copy-owls-source-implementation",
+    "copy-or-fork-contract-authority",
+    "framework-specific-code-in-neutral-core",
+    "activate-during-prepare",
+    "remove-cold-start-fallback"
+  ],
+  "admission_requires": {
+    "all_required_evidence": true,
+    "immutable_source_revision": true,
+    "human_review": true,
+    "status_change_to": "admitted"
+  }
+}
