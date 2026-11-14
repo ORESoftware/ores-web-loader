@@ -21,7 +21,7 @@ function runFixture(modify = () => {}) {
     fs.copyFileSync(path.join(repositoryRoot, 'README.md'), path.join(dir, 'README.md'));
     const policy = structuredClone(baselinePolicy);
     const counterparts = structuredClone(baselineCounterparts);
-    modify(policy, counterparts);
+    modify(policy, counterparts, dir);
     fs.writeFileSync(path.join(dir, 'extraction-admission.json'), JSON.stringify(policy));
     fs.writeFileSync(path.join(dir, 'counterparts.json'), JSON.stringify(counterparts));
     const result = spawnSync(process.execPath, [
@@ -42,6 +42,22 @@ function expectRejected(modify, message) {
 
 test('the existing unadmitted source remains valid', () => {
   assert.equal(runFixture().status, 0);
+});
+
+
+test('documentation-only contract boundary is allowed before admission', () => {
+  const result = runFixture((_policy, _counterparts, dir) => {
+    fs.mkdirSync(path.join(dir, 'contracts'));
+    fs.writeFileSync(path.join(dir, 'contracts/README.md'), '# Placeholder\\n');
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('authored contract schema is forbidden before admission', () => {
+  expectRejected((_policy, _counterparts, dir) => {
+    fs.mkdirSync(path.join(dir, 'contracts'));
+    fs.writeFileSync(path.join(dir, 'contracts/schema.tsp'), 'model Payload {}');
+  }, /authored contract authority is forbidden/);
 });
 
 test('a deleted evidence item cannot be replaced by an unrelated item', () => {
