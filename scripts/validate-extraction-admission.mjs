@@ -57,7 +57,12 @@ require(policy.admission_requires?.status_change_to === 'admitted', 'admitted st
 
 if (policy.extraction_status === 'not_admitted') {
   require(!fs.existsSync(path.join(root, 'src')), 'neutral implementation source is forbidden before admission');
-  require(!fs.existsSync(path.join(root, 'contracts')), 'new contract authority is forbidden before admission');
+  const contractsPath = path.join(root, 'contracts');
+  if (fs.existsSync(contractsPath)) {
+    const entries = fs.readdirSync(contractsPath, { withFileTypes: true });
+    require(entries.every((entry) => entry.name === 'README.md' && entry.isFile()),
+      'authored contract authority is forbidden before admission (README placeholder is allowed)');
+  }
   require(policy.admission_receipt === undefined, 'unadmitted package must not claim an admission receipt');
 } else if (policy.extraction_status === 'admitted') {
   // A status-only change cannot turn an unreviewed extraction into an admitted one.
