@@ -27,18 +27,7 @@ const forbiddenBeforeAdmission = [
   'remove-cold-start-fallback',
 ];
 const isLowerHex = (value, length) =>
-  typeof value === 'string' && new RegExp(`^[0-9a-f]{${length}}import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const policy = JSON.parse(fs.readFileSync(path.join(root, 'extraction-admission.json'), 'utf8'));
-const counterparts = JSON.parse(fs.readFileSync(path.join(root, 'counterparts.json'), 'utf8'));
-const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-const errors = [];
-const require = (ok, message) => { if (!ok) errors.push(message); };
-
-).test(value);
+  typeof value === 'string' && new RegExp('^[0-9a-f]{' + length + '}$').test(value);
 require(policy.schema_version === 1, 'unsupported admission schema');
 require(Array.isArray(counterparts.counterparts), 'counterpart registry is missing');
 
