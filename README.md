@@ -31,3 +31,17 @@ This repository does **not** copy that implementation. Until shared code is deli
 8. consumer rollouts use immutable counterpart revisions and retain a cold-start fallback when speculative preparation is skipped or fails.
 
 See `counterparts.json` for the currently admitted implementation canary.
+
+## Extraction admission gate
+
+`scripts/validate-extraction-admission.mjs` enforces the complete set of
+required evidence and forbidden pre-admission operations, including pinned
+lowercase source SHA identity and mandatory human review policy.
+
+A transition from `not_admitted` to `admitted` must include an
+`admission_receipt` with the exact source revision, an immutable
+40-character review commit, nonempty `reviewed_by` identities, and
+`evidence_sha256` containing a lowercase SHA-256 for **each** required
+evidence item. These receipts provide traceable review inputs; they are not
+proof that a reviewer or CI independently verified the underlying artifacts.
+The admission checker and adversarial tests run in CI without network access.
