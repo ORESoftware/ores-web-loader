@@ -19,3 +19,4 @@ jobs:
         with:
           node-version: '22'
       - run: node scripts/validate-extraction-admission.mjs
+      - run: node --test scripts/test-extraction-admission.mjs
